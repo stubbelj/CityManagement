@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class Room : MonoBehaviour
 {
+    public const float ROOM_WIDTH = 80f;
+    public const float ROOM_HEIGHT = 30f;
     string type = "noType";
-    (int, int) coords = (0, 0);
-    bool traversable = true;
+    bool verticalTraversal = false;
+    bool horizontalTraversal = true;
+    public (int, int) coords = (-1, -1);
 
     private GameManager gameManager;
     // Start is called before the first frame update
@@ -27,71 +30,43 @@ public class Room : MonoBehaviour
     }
 
     public List<Room> AdjRooms((int, int) coords) {
+        // returns up to 4 horizontally and vertically adjacent rooms
         List<Room> temp = new List<Room>();
-        temp.Add(gameManager.roomFromCoords(coords.Item1 + 1, coords.Item2));
-        temp.Add(gameManager.roomFromCoords(coords.Item1 - 1, coords.Item2));
-        temp.Add(gameManager.roomFromCoords(coords.Item1, coords.Item2 + 1));
-        temp.Add(gameManager.roomFromCoords(coords.Item1, coords.Item2 - 1));
+        foreach((int, int) pair in new (int, int)[] {(1, 0), (-1, 0), (0, 1), (0, -1)}) {
+            Room room = gameManager.RoomFromCoords((coords.Item1 + pair.Item1, coords.Item2 + pair.Item2));
+            if (room != null) {
+                temp.Add(room);
+            }
+        }
         return temp;
     }
 
-    public float Distance(Room a, Room b) {
+    public List<Room> AdjRoomsTraversable((int, int) coords) {
+        // returns up to 4 horizontally and vertically adjacent rooms
+        List<Room> temp = new List<Room>();
+        Room room = gameManager.RoomFromCoords(coords);
+        if (room.horizontalTraversal) {
+            foreach((int, int) pair in new (int, int)[] {(-1, 0), (1, 0)}) {
+                Room adjRoom = gameManager.RoomFromCoords((coords.Item1 + pair.Item1, coords.Item2 + pair.Item2));
+                if (adjRoom != null && adjRoom.horizontalTraversal) {
+                    temp.Add(adjRoom);
+                }
+            }
+        }
+        if (room.verticalTraversal) {
+            foreach((int, int) pair in new (int, int)[] {(0, -1), (0, 1)}) {
+                Room adjRoom = gameManager.RoomFromCoords((coords.Item1 + pair.Item1, coords.Item2 + pair.Item2));
+                if (adjRoom != null && adjRoom.verticalTraversal) {
+                    temp.Add(adjRoom);
+                }
+            }
+        }
+        return temp;
+    }
+
+    public int Distance(Room a, Room b) {
+        //returns the distance between room a and b in terms of the number of strictly vertical or horizontal steps between them
         return Mathf.Abs(a.coords.Item1 - b.coords.Item1) + Mathf.Abs(a.coords.Item2 - b.coords.Item2);
     }
 
-    /*List<Room> PathToRoom(Room endRoom, Room startRoom) {
-        //keep track of node list of all explored nodes
-        //each node has a distance to start, distance to end, and the sum of both
-        //after exploring each node, add its adj nodes to node list and modify data on all nodes
-        //g-cost = dist from start
-        //h-cost = dist from end
-        //f-cost = g + h
-        //A* pathfinding algo
-        List<Room> open = new List<Room>();
-        List<Room> closed = new List<Room>();
-        List<List<(int, int, Room)>> ghfpData = new List<List<Room>>();
-        for(int i = 0; i < gameManager.cityMaxWidth; i++) {
-            ghfpData.Add(new List<(int, int, Room)>());
-            for(int j = 0; j < gameManager.cityMaxHeight; j++) {
-                ghfpData[i].Add((Distance(gameManager.roomFromCoords(i, j), startRoom), Distance(gameManager.roomFromCoords(i, j), endRoom), Distance(gameManager.roomFromCoords(i, j), startRoom) + Distance(gameManager.roomFromCoords(i, j), endRoom), gameManager.roomFromCoords(i, j)));
-            }
-        }
-        open.Add(gameManager.roomFromCoords(startRoom.coords.Item1, startRoom.coords.Item2));
-        Room curr = unvisted[0]
-
-        while(open.Count > 0) {
-            foreach(Room room in open) {
-                if (ghfpData[room.coords].Item3 < ghfpData[curr.coords].Item3) {
-                    curr = room;
-                }
-            }
-            open.Remove(curr);
-            closed.Add(curr);
-            if (curr == endRoom) {
-                //return path
-                List<Room> path = new List<Room>();
-                while(curr != startRoom) {
-                    path.Add(curr);
-                    curr = ghfpData[curr.coords].Item4;
-                }
-                path.Reverse();
-                return path;
-            }
-
-            foreach(Room adj in AdjRooms(curr.coords)) {
-                if (adj.traversable && !closed.Contains(adj)) {
-                    newDistToAdj = ghfpData[curr.coords].Item1 + Distance(curr, adj);
-                    if (newDistToAdj < ghfpData[adj.coords].Item1 || !open.Contains(adj)) {
-                        // if new path to adj is better than recorded path
-                        ghfpData[adj.coords].Item1 = newDistToAdj;
-                        ghfpData[adj.coords].Item2 = Distance(adj, endRoom);
-                        ghfpData[adj.coords].Item4 = curr;
-                        if(!open.Contains(adj)) {
-                            open.Add(adj);
-                        }
-                    }
-                }
-            }
-        }
-    }*/
 }

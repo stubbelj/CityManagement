@@ -14,8 +14,8 @@ public class GameManager : MonoBehaviour
     System.Random r;
     public List<List<Room>> roomGraph = new List<List<Room>>();
 
-    private const int cityMaxWidth = 24;
-    private const int cityMaxHeight = 24;
+    public int cityMaxWidth = 24;
+    public int cityMaxHeight = 24;
     /*
     public struct Node () {
         public List<Node*> adj;
@@ -62,11 +62,28 @@ public class GameManager : MonoBehaviour
         }
         GameObject newRoom = GameObject.Instantiate(roomPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         roomGraph[initCoords.Item1 + cityMaxWidth / 2][initCoords.Item2 + cityMaxHeight / 2] = newRoom.GetComponent<Room>();
+        //this is absolutely not correct, offset needs to be somewhere else
         Instantiate(roomPrefab, new Vector3(0, 0, 0), Quaternion.identity);
     }
 
-    Room RoomFromCoords((int, int) roomCoords) {
-        return roomGraph[roomCoords.Item1][roomCoords.Item2];
+    public Room RoomFromCoords((int, int) roomCoords) {
+        if (roomCoords.Item1 < 0 || roomCoords.Item2 < 0 || roomCoords.Item1 >= cityMaxWidth || roomCoords.Item2 >= cityMaxHeight) {
+            //out of bounds of city
+            return null;
+        }
+        Room room = roomGraph[roomCoords.Item1][roomCoords.Item2];
+        if (room == null) {
+            return null;
+        } else {
+            return room;
+        }
+    }
+
+    public (int, int) CoordsFromRoom(Room room) {
+        if (room == null) {
+            return (-1, -1);
+        }
+        return (room.coords.Item1, room.coords.Item2);
     }
 
 }
