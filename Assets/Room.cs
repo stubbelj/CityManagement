@@ -5,13 +5,14 @@ using UnityEngine;
 public class Room : MonoBehaviour
 {
     public const float ROOM_WIDTH = 80f;
-    public const float ROOM_HEIGHT = 30f;
+    public const float ROOM_HEIGHT = 48f;
     string type = "noType";
     bool verticalTraversal = false;
     bool horizontalTraversal = true;
     public (int, int) coords = (-1, -1);
 
     private GameManager gameManager;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -66,6 +67,9 @@ public class Room : MonoBehaviour
 
     public int Distance(Room a, Room b) {
         //returns the distance between room a and b in terms of the number of strictly vertical or horizontal steps between them
+        if (a == null || b == null) {
+            return -1;
+        }
         return Mathf.Abs(a.coords.Item1 - b.coords.Item1) + Mathf.Abs(a.coords.Item2 - b.coords.Item2);
     }
 

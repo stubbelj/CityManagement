@@ -335,6 +335,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomPrefab: {fileID: 3886726931411284767, guid: 988b5bb7fd46b2c44b6fbf834b03e0de, type: 3}
   roomsContainer: {fileID: 0}
+  meep: {fileID: 1506489511}
+  cityMaxWidth: 24
+  cityMaxHeight: 24
 --- !u!4 &2018453482
 Transform:
   m_ObjectHideFlags: 0

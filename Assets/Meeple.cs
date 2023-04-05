@@ -31,9 +31,10 @@ public class Meeple : MonoBehaviour
                 StartCoroutine(currentTaskStep);
             }
         }
+
     }
 
-    List<Room> PathToRoom(Room endRoom, Room startRoom) {
+    public List<Room> PathToRoom(Room startRoom, Room endRoom) {
         //returns the shortest Meeple-traversable path from startRoom to endRoom, taking vert/hori traversability into account
         //
         //keep track of node list of all explored nodes
@@ -50,13 +51,18 @@ public class Meeple : MonoBehaviour
             ghfpData.Add(new List<(int, int, int, Room)>());
             for(int j = 0; j < gameManager.cityMaxHeight; j++) {
                 Room ijRoom = gameManager.RoomFromCoords((i, j));
-                ghfpData[i].Add((ijRoom.Distance(ijRoom, startRoom), ijRoom.Distance(ijRoom, endRoom), ijRoom.Distance(ijRoom, startRoom) + ijRoom.Distance(ijRoom, endRoom), ijRoom));
+                if (ijRoom == null) {
+                    ghfpData[i].Add((0, 0, 0, null));
+                } else {
+                    ghfpData[i].Add((ijRoom.Distance(ijRoom, startRoom), ijRoom.Distance(ijRoom, endRoom), ijRoom.Distance(ijRoom, startRoom) + ijRoom.Distance(ijRoom, endRoom), ijRoom));
+                }
             }
         }
         open.Add(gameManager.RoomFromCoords((startRoom.coords.Item1, startRoom.coords.Item2)));
         Room curr = open[0];
 
         while(open.Count > 0) {
+            curr = open[0];
             foreach(Room room in open) {
                 if (ghfpData[room.coords.Item1][room.coords.Item2].Item3 < ghfpData[curr.coords.Item1][curr.coords.Item2].Item3) {
                     curr = room;
@@ -91,7 +97,7 @@ public class Meeple : MonoBehaviour
         return null;
     }
 
-    List<IEnumerator> PathToRoomTasks(Room endRoom, Room startRoom) {
+    public List<IEnumerator> PathToRoomTasks(Room startRoom, Room endRoom) {
         //returns list of task steps of the form [TaskWalkPath, TaskLadderPath, TaskWalkPath...] that constitute moving along the path from endRoom to startRoom
         List<Room> path = PathToRoom(endRoom, startRoom);
         //Path has been made, time to split it up into task steps (walking, climbing)
@@ -121,13 +127,23 @@ public class Meeple : MonoBehaviour
         return tempTask;
     }
 
+    public void WalkToRoom(Room startRoom, Room endRoom) {
+        taskQueue.Add(PathToRoomTasks(startRoom, endRoom));
+    }
+
     public IEnumerator TaskWalkPath(List<Room> path) {
         //makes the Meeple walk along a given horizontal path
+        print("walkin");
+        foreach(Room room in path) {
+            transform.position = room.gameObject.transform.position;
+        }
+        currentTaskStep = null;
         yield return null;
     }
 
     public IEnumerator TaskLadderPath(List<Room> path) {
         //makes the Meeple ladder up a given vertical path
+        currentTaskStep = null;
         yield return null;
     }
 

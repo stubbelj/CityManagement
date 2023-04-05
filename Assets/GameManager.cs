@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager inst;
+    public static GameManager inst = null;
 
     [SerializeField]
     GameObject roomPrefab;
@@ -14,8 +14,11 @@ public class GameManager : MonoBehaviour
     System.Random r;
     public List<List<Room>> roomGraph = new List<List<Room>>();
 
+    public Meeple meep;
+
     public int cityMaxWidth = 24;
     public int cityMaxHeight = 24;
+
     /*
     public struct Node () {
         public List<Node*> adj;
@@ -47,23 +50,33 @@ public class GameManager : MonoBehaviour
         }
 
         AddRoom("Cozy_Room", (0, 0));
+        AddRoom("Cozy_Room", (1, 0));
+
+        StartCoroutine(LateStart());
+
+    }
+
+    IEnumerator LateStart() {
+        yield return new WaitForSeconds(1f);
+        meep.WalkToRoom(roomGraph[0][0], roomGraph[1][0]);
+        yield return null;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
     }
+
 
     void AddRoom(string initType, (int, int) initCoords) {
         if (roomGraph[initCoords.Item1][initCoords.Item2] != null) {
             print("Error adding room in occupied location in GameManager.AddRoom()");
             return;
         }
-        GameObject newRoom = GameObject.Instantiate(roomPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-        roomGraph[initCoords.Item1 + cityMaxWidth / 2][initCoords.Item2 + cityMaxHeight / 2] = newRoom.GetComponent<Room>();
-        //this is absolutely not correct, offset needs to be somewhere else
-        Instantiate(roomPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        GameObject newRoom = GameObject.Instantiate(roomPrefab, new Vector3(initCoords.Item1 * Room.ROOM_WIDTH, initCoords.Item2 * Room.ROOM_HEIGHT, 0), Quaternion.identity);
+        roomGraph[initCoords.Item1][initCoords.Item2] = newRoom.GetComponent<Room>();
+        newRoom.GetComponent<Room>().coords = (initCoords.Item1, initCoords.Item2);
+        newRoom.name = initCoords.Item1.ToString() + ", " + initCoords.Item2.ToString();
     }
 
     public Room RoomFromCoords((int, int) roomCoords) {
