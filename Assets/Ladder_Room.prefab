@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3886726931411284766}
   - component: {fileID: 2643858768306595547}
   m_Layer: 0
-  m_Name: Room
+  m_Name: Ladder_Room
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: c21cf1ea105db1d4a8a33c14caea3bef, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c0e00befe3cd0ec4babd9c65dbf7c233, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -97,3 +97,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9640a235838eed84c80226ec169eb130, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  verticalTraversal: 1
+  horizontalTraversal: 1

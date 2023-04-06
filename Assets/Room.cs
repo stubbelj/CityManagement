@@ -4,11 +4,15 @@ using UnityEngine;
 
 public class Room : MonoBehaviour
 {
+    [SerializeField]
+    bool verticalTraversal = false;
+    [SerializeField]
+    bool horizontalTraversal = true;
+
     public const float ROOM_WIDTH = 80f;
     public const float ROOM_HEIGHT = 48f;
+
     string type = "noType";
-    bool verticalTraversal = false;
-    bool horizontalTraversal = true;
     public (int, int) coords = (-1, -1);
 
     private GameManager gameManager;

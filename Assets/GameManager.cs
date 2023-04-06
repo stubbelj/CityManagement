@@ -2,14 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
-{
+public class GameManager : MonoBehaviour {
     public static GameManager inst = null;
 
     [SerializeField]
-    GameObject roomPrefab;
-    [SerializeField]
-    GameObject roomsContainer;
+    List<GameObject> roomPrefabs = new List<GameObject>();
+
+
+    Dictionary<string, int> roomIndices = new Dictionary<string, int>{
+        {"Alchemy_Room", 0 },
+        {"Ladder_Room", 1 }
+    };
 
     System.Random r;
     public List<List<Room>> roomGraph = new List<List<Room>>();
@@ -18,19 +21,6 @@ public class GameManager : MonoBehaviour
 
     public int cityMaxWidth = 24;
     public int cityMaxHeight = 24;
-
-    /*
-    public struct Node () {
-        public List<Node*> adj;
-        public (int, int) coords;
-        public Room room;
-        public Node((int, int) initCoords) {
-            adj = new List<Node*>();
-            coords = initCoords
-        }
-    }
-    Node* rootNode;
-    */
 
     void Awake() {
         if (inst == null) {
@@ -49,8 +39,14 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        AddRoom("Cozy_Room", (0, 0));
-        AddRoom("Cozy_Room", (1, 0));
+        AddRoom("Alchemy_Room", (0, 0));
+        AddRoom("Alchemy_Room", (1, 0));
+        AddRoom("Alchemy_Room", (1, 1));
+        AddRoom("Alchemy_Room", (1, 2));
+        AddRoom("Alchemy_Room", (0, 2));
+        AddRoom("Ladder_Room", (2, 0));
+        AddRoom("Ladder_Room", (2, 1));
+        AddRoom("Ladder_Room", (2, 2));
 
         StartCoroutine(LateStart());
 
@@ -58,7 +54,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator LateStart() {
         yield return new WaitForSeconds(1f);
-        meep.WalkToRoom(roomGraph[0][0], roomGraph[1][0]);
+        meep.WalkToRoom(roomGraph[0][0], roomGraph[0][2]);
         yield return null;
     }
 
@@ -73,10 +69,11 @@ public class GameManager : MonoBehaviour
             print("Error adding room in occupied location in GameManager.AddRoom()");
             return;
         }
-        GameObject newRoom = GameObject.Instantiate(roomPrefab, new Vector3(initCoords.Item1 * Room.ROOM_WIDTH, initCoords.Item2 * Room.ROOM_HEIGHT, 0), Quaternion.identity);
+        GameObject newRoom = GameObject.Instantiate(roomPrefabs[roomIndices[initType]], new Vector3(initCoords.Item1 * Room.ROOM_WIDTH, initCoords.Item2 * Room.ROOM_HEIGHT, 0), Quaternion.identity);
         roomGraph[initCoords.Item1][initCoords.Item2] = newRoom.GetComponent<Room>();
         newRoom.GetComponent<Room>().coords = (initCoords.Item1, initCoords.Item2);
-        newRoom.name = initCoords.Item1.ToString() + ", " + initCoords.Item2.ToString();
+        newRoom.name = "Room " + initCoords.Item1 + initCoords.Item2;
+        
     }
 
     public Room RoomFromCoords((int, int) roomCoords) {
