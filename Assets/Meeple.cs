@@ -1,37 +1,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Meeple : MonoBehaviour
 {
     private GameManager gameManager;
 
-    public List<IEnumerator> currentTask = new List<IEnumerator>();
-    public IEnumerator currentTaskStep;
-    public List<List<IEnumerator>> taskQueue = new List<List<IEnumerator>>();
+    public List<Action> currentTask = new List<Action>();
+    public Action currentTaskStep;
+    public List<List<Action>> taskQueue = new List<List<Action>>();
     Animator anim;
+    SpriteRenderer sr;
     string currAnimState;
+    float walkSpeed = 3f;
 
     void Start()
     {
         gameManager = GameManager.inst;
         anim = gameObject.GetComponent<Animator>();
+        sr = gameObject.GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
-        if(currentTask.Count == 0 && taskQueue.Count > 0) {
-            //if there is no current task and there are tasks to perform
-            //currentTask becomes null at the end of the final step of a task
-            currentTask = taskQueue[0];
-            taskQueue.RemoveAt(0);
+        if(currentTask.Count == 0) {
+            //if there are no actions left in current task
+            if (taskQueue.Count > 0) {
+                currentTask = taskQueue[0];
+                taskQueue.RemoveAt(0);
+            }
         } else {
-            if (currentTaskStep == null && currentTask.Count > 0) {
-                //if there is no current task step and there are task steps to perform
+            if (currentTaskStep == null) {
+                //if there is no current task step
                 //currentTaskStep becomes null at the end of the final step of a task 
                 currentTaskStep = currentTask[0];
                 currentTask.RemoveAt(0);
-                StartCoroutine(currentTaskStep);
+                currentTaskStep();
             }
         }
 
@@ -100,29 +105,31 @@ public class Meeple : MonoBehaviour
         return null;
     }
 
-    public List<IEnumerator> PathToRoomTasks(Room startRoom, Room endRoom) {
+    public List<Action> PathToRoomTasks(Room startRoom, Room endRoom) {
         //returns list of task steps of the form [TaskWalkPath, TaskLadderPath, TaskWalkPath...] that constitute moving along the path from endRoom to startRoom
         List<Room> path = PathToRoom(startRoom, endRoom);
         //Path has been made, time to split it up into task steps (walking, climbing)
         Room prev = path[0];
         List<Room> tempPath = new List<Room>();
-        List<IEnumerator> tempTask = new List<IEnumerator>();
+        List<Action> tempTask = new List<Action>();
         bool verticalPath = false;
         foreach (Room room in path) {
             if (room.coords.Item2 != prev.coords.Item2 && !verticalPath) {
-                print("Added walk task for path:");
+                /*print("Added walk task for path:");
                 foreach (Room pathRoom in tempPath) {
                     print(pathRoom);
-                }
-                tempTask.Add(TaskWalkPath(tempPath));
+                }*/
+                List<Room> tempPathVal = new List<Room>(tempPath);
+                tempTask.Add(new Action(() => TaskWalkPath(tempPathVal)));
                 tempPath.Clear();
                 verticalPath = !verticalPath;
             } else if (room.coords.Item1 != prev.coords.Item1 && verticalPath) {
-                print("Added ladder task for path:");
+                /*print("Added ladder task for path:");
                 foreach (Room pathRoom in tempPath) {
                     print(pathRoom);
-                }
-                tempTask.Add(TaskLadderPath(tempPath));
+                }*/
+                List<Room> tempPathVal = new List<Room>(tempPath);
+                tempTask.Add(new Action(() => TaskLadderPath(tempPathVal)));
                 tempPath.Clear();
                 verticalPath = !verticalPath;
             }
@@ -131,18 +138,21 @@ public class Meeple : MonoBehaviour
         }
         // then empty out last task step
         if (!verticalPath) {
-            print("Added walk task for path:");
+            /*print("Added walk task for path:");
             foreach (Room pathRoom in tempPath) {
                     print(pathRoom);
-            }
-            tempTask.Add(TaskWalkPath(tempPath));
+            }*/
+            List<Room> tempPathVal = new List<Room>(tempPath);
+            tempTask.Add(new Action(() => TaskWalkPath(tempPathVal)));
         } else {
-            print("Added ladder task for path:");
+            /*print("Added ladder task for path:");
             foreach (Room pathRoom in tempPath) {
                 print(pathRoom);
-            }
-            tempTask.Add(TaskLadderPath(tempPath));
+            }*/
+            List<Room> tempPathVal = new List<Room>(tempPath);
+            tempTask.Add(new Action(() => TaskWalkPath(tempPathVal)));
         }
+    
         return tempTask;
     }
 
@@ -150,15 +160,21 @@ public class Meeple : MonoBehaviour
         taskQueue.Add(PathToRoomTasks(startRoom, endRoom));
     }
 
-    public IEnumerator TaskWalkPath(List<Room> path) {
+    public void TaskWalkPath (List<Room> path) {
+        StartCoroutine(TaskWalkPathCoroutine(path));
+    }
+    public IEnumerator TaskWalkPathCoroutine(List<Room> path) {
         //makes the Meeple walk along a given horizontal path
         //print("Task Walk Path:");
         foreach(Room room in path) {
-            float diffVec = (room.gameObject.transform.position - transform.position).x;
+            //print(room);
             ChangeAnimationState("MeepleWalk");
-            while (Mathf.Abs((room.gameObject.transform.position - transform.position).x) >= 0.1f) {
-                transform.position += new Vector3((diffVec) / (Mathf.Abs(diffVec)), 0, 0);
-                yield return new WaitForSeconds(0.01f);
+            while (Mathf.Abs((room.gameObject.transform.position - transform.position).x) > 1f) {
+                if (((room.gameObject.transform.position - transform.position).x > 0 && sr.flipX) || ((room.gameObject.transform.position - transform.position).x < 0 && !sr.flipX)) {
+                    sr.flipX = !sr.flipX;
+                }
+                transform.position += new Vector3(walkSpeed * ((room.gameObject.transform.position - transform.position).x) / (Mathf.Abs((room.gameObject.transform.position - transform.position).x)), 0, 0);
+                yield return new WaitForSeconds(0.1f);
             }
         }
         ChangeAnimationState("Idle");
@@ -166,15 +182,18 @@ public class Meeple : MonoBehaviour
         yield return null;
     }
 
-    public IEnumerator TaskLadderPath(List<Room> path) {
+    public void TaskLadderPath (List<Room> path) {
+        StartCoroutine(TaskLadderPathCoroutine(path));
+    }
+    public IEnumerator TaskLadderPathCoroutine(List<Room> path) {
         //makes the Meeple ladder up a given vertical path
         //print("Task Ladder Path:");
         foreach(Room room in path) {
-            float diffVec = (room.gameObject.transform.position - transform.position).y;
+            //print(room);
             ChangeAnimationState("MeepleLadder");
-            while (Mathf.Abs((room.gameObject.transform.position - transform.position).y) >= 0.1f) {
-                transform.position += new Vector3(0, (diffVec) / (Mathf.Abs(diffVec)), 0);
-                yield return new WaitForSeconds(0.01f);
+            while (Mathf.Abs((room.gameObject.transform.position - transform.position).y) > 1f) {
+                transform.position += new Vector3(0, walkSpeed * ((room.gameObject.transform.position - transform.position).y) / (Mathf.Abs((room.gameObject.transform.position - transform.position).y)), 0);
+                yield return new WaitForSeconds(0.1f);
             }
         }
         ChangeAnimationState("Idle");
@@ -195,5 +214,6 @@ public class Meeple : MonoBehaviour
         anim.Play(newState);
         currAnimState = newState;
     }
+
 
 }

@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour {
         GameObject newRoom = GameObject.Instantiate(roomPrefabs[roomIndices[initType]], new Vector3(initCoords.Item1 * Room.ROOM_WIDTH, initCoords.Item2 * Room.ROOM_HEIGHT, 0), Quaternion.identity);
         roomGraph[initCoords.Item1][initCoords.Item2] = newRoom.GetComponent<Room>();
         newRoom.GetComponent<Room>().coords = (initCoords.Item1, initCoords.Item2);
-        newRoom.name = "Room " + initCoords.Item1 + initCoords.Item2;
+        newRoom.name = "Room " + initCoords.Item1 + ", " + initCoords.Item2;
         
     }
 

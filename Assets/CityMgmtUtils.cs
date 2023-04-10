@@ -22,4 +22,8 @@ public class CityMgmtUtils
         }
         return data;
     }
+
+    public IEnumerator Wait(float sec){
+        yield return new WaitForSeconds(sec);
+    }
 }
