@@ -39,14 +39,14 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        AddRoom("Alchemy_Room", (0, 0));
-        AddRoom("Alchemy_Room", (1, 0));
-        AddRoom("Alchemy_Room", (1, 1));
-        AddRoom("Alchemy_Room", (1, 2));
+        AddRoom("Alchemy_Room", (0, 0)); //
+        AddRoom("Alchemy_Room", (2, 0)); //
+        AddRoom("Alchemy_Room", (2, 1)); // checks for room (1, 1) which dne
+        AddRoom("Alchemy_Room", (2, 2)); 
         AddRoom("Alchemy_Room", (0, 2));
-        AddRoom("Ladder_Room", (2, 0));
-        AddRoom("Ladder_Room", (2, 1));
-        AddRoom("Ladder_Room", (2, 2));
+        AddRoom("Ladder_Room", (4, 0));
+        AddRoom("Ladder_Room", (4, 1));
+        AddRoom("Ladder_Room", (4, 2));
 
         StartCoroutine(LateStart());
 
@@ -67,12 +67,35 @@ public class GameManager : MonoBehaviour {
     void AddRoom(string initType, (int, int) initCoords) {
         if (roomGraph[initCoords.Item1][initCoords.Item2] != null) {
             print("Error adding room in occupied location in GameManager.AddRoom()");
+            print("Error adding room at" + initCoords + "due to existing room" + roomGraph[initCoords.Item1][initCoords.Item2].coords);
             return;
         }
-        GameObject newRoom = GameObject.Instantiate(roomPrefabs[roomIndices[initType]], new Vector3(initCoords.Item1 * Room.ROOM_WIDTH, initCoords.Item2 * Room.ROOM_HEIGHT, 0), Quaternion.identity);
-        roomGraph[initCoords.Item1][initCoords.Item2] = newRoom.GetComponent<Room>();
-        newRoom.GetComponent<Room>().coords = (initCoords.Item1, initCoords.Item2);
-        newRoom.name = "Room " + initCoords.Item1 + ", " + initCoords.Item2;
+        Room newRoom = GameObject.Instantiate(roomPrefabs[roomIndices[initType]], new Vector3(0, 0, 0), Quaternion.identity).GetComponent<Room>();
+        Vector3 spawnCoords = new Vector3();
+        if (initCoords.Item1 >= cityMaxWidth || initCoords.Item2 >= cityMaxHeight) {
+            print("Error adding room in coordinates that are out of bounds in GameManager.AddRoom()");
+            return;
+        }
+        if (initCoords.Item1 > 0 ) {
+            spawnCoords.x = initCoords.Item1 * newRoom.baseFloatWidth;
+        }
+        if (initCoords.Item2 > 0 ) {
+            spawnCoords.y = initCoords.Item2 * newRoom.baseFloatHeight;
+        }
+        newRoom.transform.position = spawnCoords;
+        
+        int size = 0;
+        while (size < newRoom.width) {
+            roomGraph[initCoords.Item1 + size][initCoords.Item2] = newRoom;
+            size++;
+        }
+        size = 0;
+        while (size < newRoom.height) {
+            roomGraph[initCoords.Item1][initCoords.Item2 + size] = newRoom;
+            size++;
+        }
+        newRoom.coords = (initCoords.Item1, initCoords.Item2);
+        newRoom.gameObject.name = "Room " + initCoords.Item1 + ", " + initCoords.Item2;
         
     }
 
@@ -94,6 +117,21 @@ public class GameManager : MonoBehaviour {
             return (-1, -1);
         }
         return (room.coords.Item1, room.coords.Item2);
+    }
+
+    public List<(int, int)> AllCoordsFromRoom(Room room) {
+        List<(int, int)> temp = new List<(int, int)>();
+        int i = 0;
+        while (i < room.width) {
+            temp.Add((room.coords.Item1 + i, room.coords.Item2));
+            i++;
+        }
+        i = 0;
+        while (i < room.height) {
+            temp.Add((room.coords.Item1, room.coords.Item2 + i));
+            i++;
+        }
+        return temp;
     }
 
 }

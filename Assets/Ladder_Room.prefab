@@ -99,3 +99,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   verticalTraversal: 1
   horizontalTraversal: 1
+  width: 2
+  height: 1
+  floatWidth: 80
+  floatHeight: 48
